@@ -1,0 +1,53 @@
+name: Reddit→Twitter Bot
+
+on:
+  schedule:
+    # top of every 2nd hour: 00:00, 02:00, 04:00, … UTC
+    - cron: '0 */2 * * *'
+  workflow_dispatch:
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          # allow pushing back to the repo
+          persist-credentials: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install system deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      - name: Install Python packages
+        run: |
+          python -m pip install --upgrade pip
+          pip install praw tweepy yt-dlp
+
+      - name: Run bot (single post)
+        id: run_bot
+        run: python bot.py
+
+      - name: Commit updated posted_posts.txt
+        if: ${{ steps.run_bot.outcome == 'success' }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if [ -n "$(git status --porcelain posted_posts.txt)" ]; then
+            git add posted_posts.txt
+            git commit -m "chore: update posted_posts.txt [skip ci]"
+            git push
+          else
+            echo "No new posts to record."
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

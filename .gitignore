@@ -1,0 +1,18 @@
+# Byte‐compiled / cache
+__pycache__/
+*.py[cod]
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Python virtual environments
+venv/
+.env/
+
+# temp directories & files
+tmp*/
+*.log
+
+# cookies or other credentials
+cookies.txt
